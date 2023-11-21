@@ -23,6 +23,7 @@ class App extends Component {
     loading: false,
     page: 1,
     loadMore: false,
+    executedQueries: [],
   };
 
   componentDidUpdate(_, prevState) {
@@ -45,13 +46,20 @@ class App extends Component {
       this.setState({ loading: true });
       const data = await getImages(query, page);
       const { hits, totalHits } = data;
-      this.setState(prev => ({
-        images: [...prev.images, ...hits],
-        loadMore: prev.page < Math.ceil(totalHits / 12),
-        page: prev.page + 1,
-        error: '',
-        loading: false,
-      }));
+      this.setState(
+        prev => ({
+          images: [...prev.images, ...hits],
+          loadMore: prev.page < Math.ceil(totalHits / 12),
+          page: prev.page + 1,
+          error: '',
+          loading: false,
+        }),
+        () => {
+          if (this.state.loadMore) {
+            this.scrollUp();
+          }
+        }
+      );
     } catch (error) {
       if (error.response && error.response.status === 400) {
         toast.error('Помилка запиту! Спробуйте ввести інше значення.');
@@ -68,18 +76,38 @@ class App extends Component {
     }
   };
 
+  
+  scrollUp = () => {
+    const cardHeight = 300;
+    window.scrollTo({
+      top: window.scrollY + cardHeight * 2,
+      behavior: 'smooth',
+    });
+  };
+
   onLoadMoreClick = () => {
     this.handleImages();
   };
 
- 
+  
   handleSubmit = ({ query }) => {
     if (!query.trim()) {
       toast.error('Ви нічого не ввели !');
       return;
     }
 
-    this.setState({ query, images: [], page: 1, loadMore: true });
+    if (this.state.executedQueries.includes(query.toLowerCase())) {
+      toast.error("Ви вже зробили запит з таким ім'ям.");
+      return;
+    }
+
+    this.setState(prevState => ({
+      query,
+      images: [],
+      page: 1,
+      loadMore: true,
+      executedQueries: [...prevState.executedQueries, query.toLowerCase()],
+    }));
   };
 
   toggleModal = () => {
@@ -116,5 +144,8 @@ class App extends Component {
     );
   }
 }
+
+
+
 
 export default App;
