@@ -13,6 +13,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 
 
+
 class App extends Component {
   state = {
     showModal: false,
@@ -35,8 +36,14 @@ class App extends Component {
 
   handleImages = async () => {
     try {
+      const { query, page } = this.state;
+      if (!query.trim()) {
+        toast.error('Ви нічого не ввели!');
+        return;
+      }
+
       this.setState({ loading: true });
-      const data = await getImages(this.state.query, this.state.page);
+      const data = await getImages(query, page);
       const { hits, totalHits } = data;
       this.setState(prev => ({
         images: [...prev.images, ...hits],
@@ -65,6 +72,7 @@ class App extends Component {
     this.handleImages();
   };
 
+ 
   handleSubmit = ({ query }) => {
     if (!query.trim()) {
       toast.error('Ви нічого не ввели !');
@@ -83,6 +91,8 @@ class App extends Component {
   handleImageClick = ({ largeImageURL, tags }) => {
     this.setState({ showModal: true, largeImageURL, tags });
   };
+
+
   // scrollUp = () => {
   //   const cardHeight = '300px';
   //   window.scrollBy({
@@ -108,17 +118,13 @@ class App extends Component {
         )}
         {loading && <Loader />}
         {error && <p className={css.error}>{error}</p>}
-        {loadMore && this.state.query.trim() !== '' && (
-          <LoadMoreBtn
-            onClick={this.onLoadMoreClick}
-            // onScrollUp={this.scrollUp}
-          />
+        {loadMore && !loading && this.state.query.trim() !== '' && (
+          <LoadMoreBtn onClick={this.onLoadMoreClick} />
+          // <LoadMoreBtn onClick={this.onLoadMoreClick}  onScrollUp={this.scrollUp} />
         )}
       </Container>
     );
   }
 }
 
-
 export default App;
-
