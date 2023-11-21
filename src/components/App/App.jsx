@@ -1,18 +1,14 @@
-
-import { Component } from 'react'
-import Modal from '../Modal/Modal'
+import { Component } from 'react';
+import Modal from '../Modal/Modal';
 import getImages from '../Api/imageApi';
-import ImageGallery from '../ImageGallery/ImageGallery'
-import Searchbar from '../Searchbar/Searchbar'
-import LoadMoreBtn from '../Button/Button'
-import Loader from '../Loader/Loader'
-import css from './app.module.css'
-import Container from '../Container/Container'
-import {ToastContainer, toast } from 'react-toastify';
+import ImageGallery from '../ImageGallery/ImageGallery';
+import Searchbar from '../Searchbar/Searchbar';
+import LoadMoreBtn from '../Button/Button';
+import Loader from '../Loader/Loader';
+import css from './app.module.css';
+import Container from '../Container/Container';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-
-
 
 class App extends Component {
   state = {
@@ -76,7 +72,6 @@ class App extends Component {
     }
   };
 
-  
   scrollUp = () => {
     const cardHeight = 300;
     window.scrollTo({
@@ -89,11 +84,22 @@ class App extends Component {
     this.handleImages();
   };
 
-  
-  handleSubmit = ({ query }) => {
+
+  handleSubmit = async ({ query }) => {
     if (!query.trim()) {
       toast.error('Ви нічого не ввели !');
       return;
+    }
+
+    if (
+      this.state.executedQueries.length > 0 &&
+      this.state.executedQueries[
+        this.state.executedQueries.length - 1
+      ].toLowerCase() !== query.toLowerCase()
+    ) {
+      this.setState({
+        executedQueries: [],
+      });
     }
 
     if (this.state.executedQueries.includes(query.toLowerCase())) {
@@ -108,6 +114,8 @@ class App extends Component {
       loadMore: true,
       executedQueries: [...prevState.executedQueries, query.toLowerCase()],
     }));
+
+    await this.handleImages();
   };
 
   toggleModal = () => {
@@ -144,8 +152,5 @@ class App extends Component {
     );
   }
 }
-
-
-
 
 export default App;
