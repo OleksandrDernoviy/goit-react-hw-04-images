@@ -8,6 +8,8 @@ import LoadMoreBtn from '../LoadMoreBtn/LoadMoreBtn'
 import Loader from '../Loader/Loader'
 import css from './app.module.css'
 import Container from '../Container/Container'
+import {ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 
@@ -44,10 +46,18 @@ class App extends Component {
         loading: false,
       }));
     } catch (error) {
-      this.setState({
-        error: error.response?.data ?? 'Error fetching images',
-        loading: false,
-      });
+      if (error.response && error.response.status === 400) {
+        toast.error('Помилка запиту! Спробуйте ввести інше значення.');
+        this.setState({
+          loading: false,
+          loadMore: false,
+        });
+      } else {
+        this.setState({
+          error: error.response?.data ?? 'Error fetching images',
+          loading: false,
+        });
+      }
     }
   };
 
@@ -56,6 +66,11 @@ class App extends Component {
   };
 
   handleSubmit = ({ query }) => {
+    if (!query.trim()) {
+      toast.error('Ви нічого не ввели !');
+      return;
+    }
+
     this.setState({ query, images: [], page: 1, loadMore: true });
   };
 
@@ -68,21 +83,20 @@ class App extends Component {
   handleImageClick = ({ largeImageURL, tags }) => {
     this.setState({ showModal: true, largeImageURL, tags });
   };
-
-  scrollUp = () => {
-    const cardHeight = '300px'
-      window.scrollBy({
-        top: cardHeight * 2,
-        behavior: 'smooth',
-      })
-    }
-  
+  // scrollUp = () => {
+  //   const cardHeight = '300px';
+  //   window.scrollBy({
+  //     top: cardHeight * 2,
+  //     behavior: 'smooth',
+  //   });
+  // };
 
   render() {
     const { showModal, loading, error, images, loadMore, largeImageURL, tags } =
       this.state;
     return (
       <Container>
+        <ToastContainer />
         <Searchbar className={css.searchbar} submit={this.handleSubmit} />
         {images && (
           <ImageGallery images={images} openModal={this.handleImageClick} />
@@ -97,7 +111,7 @@ class App extends Component {
         {loadMore && this.state.query.trim() !== '' && (
           <LoadMoreBtn
             onClick={this.onLoadMoreClick}
-            onScrollUp={this.scrollUp}
+            // onScrollUp={this.scrollUp}
           />
         )}
       </Container>
@@ -106,26 +120,5 @@ class App extends Component {
 }
 
 
-
-
 export default App;
 
-
-
-
-// Вся основна логіка повинна бути в Арр.
-// Для запиту використовуємо метод життєвого циуклу класового компонента componentDidUpdate. Робити запит на бекенд потрібно в Арр, достатньо однієї умови для запиту:
-// componentDidUpdate(prevProps, prevState){
-//  if(this.state.page !== prevState.page || this.state.query!== prevState.query ){
-//    fetch()
-//  }
-// }
-// Функція для запиту повинна бути в окремому файлі, в Арр її лише викликаємо.
-// Коли на бекенді закінчилися фото, приховуємо кнопку “Load more”.
-// Для перевірки можна використовувати слова для пошуку “min” “max”.
-// Один із варіантів реалізації приховування кнопки “Load more”
-// this.steState(prev =>({
-//  images: [...prev.images, ...hits],
-//  loadMore: this.state.page < Math.ceil(totalHits / 12 )
-// }))
-// Не забуваємо коректно опрацьовувати слухача для клавіатури в компоненті модального вікна.
