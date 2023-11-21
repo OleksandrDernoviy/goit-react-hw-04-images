@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import React, { Component } from 'react';
 import Modal from '../Modal/Modal';
 import getImages from '../Api/imageApi';
 import ImageGallery from '../ImageGallery/ImageGallery';
@@ -35,7 +35,7 @@ class App extends Component {
     try {
       const { query, page } = this.state;
       if (!query.trim()) {
-        this.setState({ loading: false }); 
+        this.setState({ loading: false });
         return;
       }
 
@@ -56,7 +56,7 @@ class App extends Component {
       const { hits, totalHits } = data;
       this.setState(
         prev => ({
-          images: [...prev.images, ...hits],
+          images: prev.page === 1 ? hits : [...prev.images, ...hits],
           loadMore: prev.page < Math.ceil(totalHits / 12),
           page: prev.page + 1,
           error: '',
