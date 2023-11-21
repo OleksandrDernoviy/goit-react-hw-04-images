@@ -35,11 +35,23 @@ class App extends Component {
     try {
       const { query, page } = this.state;
       if (!query.trim()) {
-        toast.error('Ви нічого не ввели!');
+        this.setState({ loading: false }); 
         return;
       }
 
       this.setState({ loading: true });
+
+      if (
+        this.state.executedQueries.length > 0 &&
+        this.state.executedQueries[
+          this.state.executedQueries.length - 1
+        ].toLowerCase() !== query.toLowerCase()
+      ) {
+        this.setState({
+          executedQueries: [],
+        });
+      }
+
       const data = await getImages(query, page);
       const { hits, totalHits } = data;
       this.setState(
@@ -83,7 +95,6 @@ class App extends Component {
   onLoadMoreClick = () => {
     this.handleImages();
   };
-
 
   handleSubmit = async ({ query }) => {
     if (!query.trim()) {
