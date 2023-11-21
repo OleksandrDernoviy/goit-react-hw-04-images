@@ -2,7 +2,6 @@
 import React from 'react';
 import css from './imageGalleryItem.module.css';
 
-
 const ImageGalleryItem = ({ image, openModal }) => {
   const { webformatURL, largeImageURL, tags } = image;
 
@@ -12,11 +11,7 @@ const ImageGalleryItem = ({ image, openModal }) => {
 
   return (
     <li className={css.galleryItem} onClick={handleClick}>
-      <img
-        src={webformatURL}
-        className={css.galleryItemImage}
-        alt={tags}
-      />
+      <img src={webformatURL} className={css.galleryItemImage} alt={tags} />
     </li>
   );
 };

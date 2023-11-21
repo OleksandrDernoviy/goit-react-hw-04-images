@@ -5,16 +5,16 @@ import { LineWave } from 'react-loader-spinner';
 const Loader = () => {
   return (
     <LineWave
-      height="100"
-      width="100"
+      height="500"
+      width="500"
       color="#4fa94d"
       ariaLabel="line-wave"
       wrapperStyle={{}}
       wrapperClass={css.loaderWrapper}
       visible={true}
-      firstLineColor=""
-      middleLineColor=""
-      lastLineColor=""
+      firstLineColor="red"
+      middleLineColor="green"
+      lastLineColor="yellow"
     />
   );
 };

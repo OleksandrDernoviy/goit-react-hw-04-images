@@ -64,10 +64,19 @@ class App extends Component {
       showModal: !showModal,
     }));
   };
- 
+
   handleImageClick = ({ largeImageURL, tags }) => {
     this.setState({ showModal: true, largeImageURL, tags });
   };
+
+  scrollUp = () => {
+    const cardHeight = '300px'
+      window.scrollBy({
+        top: cardHeight * 2,
+        behavior: 'smooth',
+      })
+    }
+  
 
   render() {
     const { showModal, loading, error, images, loadMore, largeImageURL, tags } =
@@ -86,12 +95,18 @@ class App extends Component {
         {loading && <Loader />}
         {error && <p className={css.error}>{error}</p>}
         {loadMore && this.state.query.trim() !== '' && (
-          <LoadMoreBtn onClick={this.onLoadMoreClick} />
+          <LoadMoreBtn
+            onClick={this.onLoadMoreClick}
+            onScrollUp={this.scrollUp}
+          />
         )}
       </Container>
     );
   }
 }
+
+
+
 
 export default App;
 
