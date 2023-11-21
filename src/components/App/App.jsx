@@ -4,7 +4,7 @@ import Modal from '../Modal/Modal'
 import getImages from '../Api/imageApi';
 import ImageGallery from '../ImageGallery/ImageGallery'
 import Searchbar from '../Searchbar/Searchbar'
-import LoadMoreBtn from '../LoadMoreBtn/LoadMoreBtn'
+import LoadMoreBtn from '../Button/Button'
 import Loader from '../Loader/Loader'
 import css from './app.module.css'
 import Container from '../Container/Container'
@@ -92,15 +92,6 @@ class App extends Component {
     this.setState({ showModal: true, largeImageURL, tags });
   };
 
-
-  // scrollUp = () => {
-  //   const cardHeight = '300px';
-  //   window.scrollBy({
-  //     top: cardHeight * 2,
-  //     behavior: 'smooth',
-  //   });
-  // };
-
   render() {
     const { showModal, loading, error, images, loadMore, largeImageURL, tags } =
       this.state;
@@ -120,7 +111,6 @@ class App extends Component {
         {error && <p className={css.error}>{error}</p>}
         {loadMore && !loading && this.state.query.trim() !== '' && (
           <LoadMoreBtn onClick={this.onLoadMoreClick} />
-          // <LoadMoreBtn onClick={this.onLoadMoreClick}  onScrollUp={this.scrollUp} />
         )}
       </Container>
     );
