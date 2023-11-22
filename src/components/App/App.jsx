@@ -1,5 +1,5 @@
 
-import { Component } from 'react';
+import React, { Component } from 'react';
 import Modal from '../Modal/Modal';
 import getImages from '../Api/imageApi';
 import ImageGallery from '../ImageGallery/ImageGallery';
@@ -8,6 +8,8 @@ import LoadMoreBtn from '../Button/Button';
 import Loader from '../Loader/Loader';
 import css from './app.module.css';
 import Container from '../Container/Container';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 class App extends Component {
   state = {
@@ -18,6 +20,7 @@ class App extends Component {
     loading: false,
     page: 1,
     loadMore: false,
+    lastQuery: '',
   };
 
   componentDidUpdate(_, prevState) {
@@ -31,7 +34,7 @@ class App extends Component {
 
   handleImages = async () => {
     try {
-      this.setState({ loading: true });
+      this.setState({ loading: true, loadMore: false });
       const data = await getImages(this.state.query, this.state.page);
       const { hits, totalHits } = data;
       this.setState(prev => ({
@@ -42,10 +45,19 @@ class App extends Component {
         loading: false,
       }));
     } catch (error) {
-      this.setState({
-        error: error.response?.data ?? 'Error fetching images',
-        loading: false,
-      });
+      if (error.response && error.response.status === 400) {
+        toast.error('Помилка запиту!');
+        this.setState({
+          loading: false,
+          loadMore: false,
+        });
+      } else {
+        this.setState({
+          error: error.response?.data ?? 'Error fetching images',
+          loading: false,
+          loadMore: false,
+        });
+      }
     }
   };
 
@@ -54,7 +66,23 @@ class App extends Component {
   };
 
   handleSubmit = ({ query }) => {
-    this.setState({ query, images: [], page: 1, loadMore: true });
+    if (query.trim() === '') {
+      toast('Ви нічого не ввели. ');
+      return;
+    }
+
+    if (query.trim() === this.state.lastQuery.trim()) {
+      toast('Ви вже зробили аналогічний запит');
+      return;
+    }
+
+    this.setState({
+      query,
+      images: [],
+      page: 1,
+      loadMore: true,
+      lastQuery: query,
+    });
   };
 
   toggleModal = () => {
@@ -67,13 +95,13 @@ class App extends Component {
     this.setState({ showModal: true, largeImageURL, tags });
   };
 
-
   render() {
     const { showModal, loading, error, images, loadMore, largeImageURL, tags } =
       this.state;
     return (
       <Container>
         <Searchbar className={css.searchbar} submit={this.handleSubmit} />
+        <ToastContainer />
         {images && (
           <ImageGallery images={images} openModal={this.handleImageClick} />
         )}
@@ -85,9 +113,7 @@ class App extends Component {
         {loading && <Loader />}
         {error && <p className={css.error}>{error}</p>}
         {loadMore && this.state.query.trim() !== '' && (
-          <LoadMoreBtn
-            onClick={this.onLoadMoreClick}
-          />
+          <LoadMoreBtn onClick={this.onLoadMoreClick} />
         )}
       </Container>
     );
