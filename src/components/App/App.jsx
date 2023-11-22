@@ -1,4 +1,5 @@
-import React, { Component } from 'react';
+
+import { Component } from 'react';
 import Modal from '../Modal/Modal';
 import getImages from '../Api/imageApi';
 import ImageGallery from '../ImageGallery/ImageGallery';
@@ -7,8 +8,6 @@ import LoadMoreBtn from '../Button/Button';
 import Loader from '../Loader/Loader';
 import css from './app.module.css';
 import Container from '../Container/Container';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 class App extends Component {
   state = {
@@ -19,7 +18,6 @@ class App extends Component {
     loading: false,
     page: 1,
     loadMore: false,
-    executedQueries: [],
   };
 
   componentDidUpdate(_, prevState) {
@@ -33,100 +31,30 @@ class App extends Component {
 
   handleImages = async () => {
     try {
-      const { query, page } = this.state;
-      if (!query.trim()) {
-        this.setState({ loading: false });
-        return;
-      }
-
       this.setState({ loading: true });
-
-      if (
-        this.state.executedQueries.length > 0 &&
-        this.state.executedQueries[
-          this.state.executedQueries.length - 1
-        ].toLowerCase() !== query.toLowerCase()
-      ) {
-        this.setState({
-          executedQueries: [],
-        });
-      }
-
-      const data = await getImages(query, page);
+      const data = await getImages(this.state.query, this.state.page);
       const { hits, totalHits } = data;
-      this.setState(
-        prev => ({
-          images: prev.page === 1 ? hits : [...prev.images, ...hits],
-          loadMore: prev.page < Math.ceil(totalHits / 12),
-          page: prev.page + 1,
-          error: '',
-          loading: false,
-        }),
-        () => {
-          if (this.state.loadMore) {
-            this.scrollUp();
-          }
-        }
-      );
+      this.setState(prev => ({
+        images: [...prev.images, ...hits],
+        loadMore: prev.page < Math.ceil(totalHits / 12),
+        page: prev.page + 1,
+        error: '',
+        loading: false,
+      }));
     } catch (error) {
-      if (error.response && error.response.status === 400) {
-        toast.error('Помилка запиту! Спробуйте ввести інше значення.');
-        this.setState({
-          loading: false,
-          loadMore: false,
-        });
-      } else {
-        this.setState({
-          error: error.response?.data ?? 'Error fetching images',
-          loading: false,
-        });
-      }
+      this.setState({
+        error: error.response?.data ?? 'Error fetching images',
+        loading: false,
+      });
     }
-  };
-
-  scrollUp = () => {
-    const cardHeight = 300;
-    window.scrollTo({
-      top: window.scrollY + cardHeight * 2,
-      behavior: 'smooth',
-    });
   };
 
   onLoadMoreClick = () => {
     this.handleImages();
   };
 
-  handleSubmit = async ({ query }) => {
-    if (!query.trim()) {
-      toast.error('Ви нічого не ввели !');
-      return;
-    }
-
-    if (
-      this.state.executedQueries.length > 0 &&
-      this.state.executedQueries[
-        this.state.executedQueries.length - 1
-      ].toLowerCase() !== query.toLowerCase()
-    ) {
-      this.setState({
-        executedQueries: [],
-      });
-    }
-
-    if (this.state.executedQueries.includes(query.toLowerCase())) {
-      toast.error("Ви вже зробили запит з таким ім'ям.");
-      return;
-    }
-
-    this.setState(prevState => ({
-      query,
-      images: [],
-      page: 1,
-      loadMore: true,
-      executedQueries: [...prevState.executedQueries, query.toLowerCase()],
-    }));
-
-    await this.handleImages();
+  handleSubmit = ({ query }) => {
+    this.setState({ query, images: [], page: 1, loadMore: true });
   };
 
   toggleModal = () => {
@@ -139,12 +67,12 @@ class App extends Component {
     this.setState({ showModal: true, largeImageURL, tags });
   };
 
+
   render() {
     const { showModal, loading, error, images, loadMore, largeImageURL, tags } =
       this.state;
     return (
       <Container>
-        <ToastContainer />
         <Searchbar className={css.searchbar} submit={this.handleSubmit} />
         {images && (
           <ImageGallery images={images} openModal={this.handleImageClick} />
@@ -156,8 +84,10 @@ class App extends Component {
         )}
         {loading && <Loader />}
         {error && <p className={css.error}>{error}</p>}
-        {loadMore && !loading && this.state.query.trim() !== '' && (
-          <LoadMoreBtn onClick={this.onLoadMoreClick} />
+        {loadMore && this.state.query.trim() !== '' && (
+          <LoadMoreBtn
+            onClick={this.onLoadMoreClick}
+          />
         )}
       </Container>
     );
