@@ -1,125 +1,113 @@
 
-import React, { Component } from 'react';
-import Modal from '../Modal/Modal';
-import getImages from '../Api/imageApi';
-import ImageGallery from '../ImageGallery/ImageGallery';
-import Searchbar from '../Searchbar/Searchbar';
-import LoadMoreBtn from '../Button/Button';
-import Loader from '../Loader/Loader';
-import css from './app.module.css';
-import Container from '../Container/Container';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+  import { useState, useEffect, useCallback } from 'react';
+  import Modal from '../Modal/Modal';
+  import getImages from '../Api/imageApi';
+  import ImageGallery from '../ImageGallery/ImageGallery';
+  import Searchbar from '../Searchbar/Searchbar';
+  import LoadMoreBtn from '../Button/Button';
+  import Loader from '../Loader/Loader';
+  import css from './app.module.css';
+  import Container from '../Container/Container';
+  import {ToastContainer, toast } from 'react-toastify';
+  import 'react-toastify/dist/ReactToastify.css';
 
-class App extends Component {
-  state = {
-    showModal: false,
-    query: '',
-    images: [],
-    error: '',
-    loading: false,
-    page: 1,
-    loadMore: false,
-    lastQuery: '',
-  };
 
-  componentDidUpdate(_, prevState) {
-    if (
-      prevState.query !== this.state.query &&
-      this.state.query.trim() !== ''
-    ) {
-      this.handleImages();
-    }
-  }
+  const App = () => {
+  const [showModal, setShowModal] = useState(false);
+  const [query, setQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [loadMore, setLoadMore] = useState(false);
+  const [lastQuery, setLastQuery] = useState('');
+  const [modalImage, setModalImage] = useState(null);
 
-  handleImages = async () => {
+ 
+  const handleImages = useCallback(async () => {
     try {
-      this.setState({ loading: true, loadMore: false });
-      const data = await getImages(this.state.query, this.state.page);
+      setLoading(true);
+      setLoadMore(false);
+      const data = await getImages(query, page);
       const { hits, totalHits } = data;
-      this.setState(prev => ({
-        images: [...prev.images, ...hits],
-        loadMore: prev.page < Math.ceil(totalHits / 12),
-        page: prev.page + 1,
-        error: '',
-        loading: false,
-      }));
+      setImages(prevImages => [...prevImages, ...hits]);
+      setLoadMore(prevPage => prevPage < Math.ceil(totalHits / 12));
+      setPage(prevPage => prevPage + 1);
+      setError('');
+      setLoading(false);
     } catch (error) {
       if (error.response && error.response.status === 400) {
         toast.error('Помилка запиту!');
-        this.setState({
-          loading: false,
-          loadMore: false,
-        });
       } else {
-        this.setState({
-          error: error.response?.data ?? 'Error fetching images',
-          loading: false,
-          loadMore: false,
-        });
+        setError(error.response?.data ?? 'Error fetching images');
       }
+      setLoading(false);
+      setLoadMore(false);
+    }    
+  }, [query, page]);
+
+  
+  useEffect(() => {
+    if (query.trim() !== '' && query !== lastQuery) {
+      setLastQuery(query);
+      setPage(1); 
+      setImages([]); 
+      setLoadMore(false); 
+      handleImages();
     }
+  }, [query, lastQuery, handleImages]);
+  
+  const onLoadMoreClick = () => {
+    handleImages();
   };
 
-  onLoadMoreClick = () => {
-    this.handleImages();
-  };
-
-  handleSubmit = ({ query }) => {
+  const handleSubmit = ({ query }) => {
     if (query.trim() === '') {
       toast('Ви нічого не ввели. ');
       return;
     }
 
-    if (query.trim() === this.state.lastQuery.trim()) {
+    if (query.trim() === lastQuery.trim()) {
       toast('Ви вже зробили аналогічний запит');
       return;
     }
-
-    this.setState({
-      query,
-      images: [],
-      page: 1,
-      loadMore: true,
-      lastQuery: query,
-    });
+    setQuery(query);
+    setPage(1);
+    setImages([]);
+    setLoadMore(true);
+    // console.log('query:', query);    
   };
 
-  
-
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-    }));
+  const toggleModal = () => {
+    setShowModal(prevShowModal => !prevShowModal);
   };
 
-  handleImageClick = ({ largeImageURL, tags }) => {
-    this.setState({ showModal: true, largeImageURL, tags });
+  const handleImageClick = ({ largeImageURL, tags }) => {
+    setModalImage({ largeImageURL, tags });
+    setShowModal(true);
   };
 
-  render() {
-    const { showModal, loading, error, images, loadMore, largeImageURL, tags } =
-      this.state;
-    return (
-      <Container>
-        <Searchbar className={css.searchbar} submit={this.handleSubmit} />
-        <ToastContainer />
-        {images && (
-          <ImageGallery images={images} openModal={this.handleImageClick} />
-        )}
-        {showModal && (
-          <Modal onClose={this.toggleModal}>
-            <img src={largeImageURL} alt={tags} />
-          </Modal>
-        )}
-        {loading && <Loader />}
-        {error && <p className={css.error}>{error}</p>}
-        {loadMore && this.state.query.trim() !== '' && (
-          <LoadMoreBtn onClick={this.onLoadMoreClick} />
-        )}
-      </Container>
-    );
-  }
-}
+  return (
+    <Container>
+      <Searchbar className={css.searchbar} submit={handleSubmit} />
+      <ToastContainer />
+      {images && <ImageGallery images={images} openModal={handleImageClick} />}
+      {showModal && (
+        <Modal onClose={toggleModal}>
+          <img src={modalImage.largeImageURL} alt={modalImage.tags} />
+        </Modal>
+      )}
+      {loading && <Loader />}
+      {error && <p className={css.error}>{error}</p>}
+      {loadMore && query.trim() !== '' && (
+        <LoadMoreBtn onClick={onLoadMoreClick} />
+      )}
+    </Container>
+  );
+};
 
 export default App;
+  
+
+
+  

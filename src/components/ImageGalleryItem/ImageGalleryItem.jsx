@@ -8,7 +8,6 @@ const ImageGalleryItem = ({ image, openModal }) => {
   const handleClick = () => {
     openModal({ largeImageURL, tags });
   };
-
   return (
     <li className={css.galleryItem} onClick={handleClick}>
       <img src={webformatURL} className={css.galleryItemImage} alt={tags} />
