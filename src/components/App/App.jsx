@@ -22,41 +22,46 @@
   const [loadMore, setLoadMore] = useState(false);
   const [lastQuery, setLastQuery] = useState('');
   const [modalImage, setModalImage] = useState(null);
-
- 
-  const handleImages = useCallback(async () => {
-    try {
-      setLoading(true);
-      setLoadMore(false);
-      const data = await getImages(query, page);
-      const { hits, totalHits } = data;
-      setImages(prevImages => [...prevImages, ...hits]);
-      setLoadMore(prevPage => prevPage < Math.ceil(totalHits / 12));
-      setPage(prevPage => prevPage + 1);
-      setError('');
-      setLoading(false);
-    } catch (error) {
-      if (error.response && error.response.status === 400) {
-        toast.error('Помилка запиту!');
-      } else {
-        setError(error.response?.data ?? 'Error fetching images');
-      }
-      setLoading(false);
-      setLoadMore(false);
-    }    
-  }, [query, page]);
-
   
+ 
+ const handleImages = useCallback(async () => {
+   try {
+     setLoading(true);
+     setLoadMore(false);
+
+     const data = await getImages(query, page);
+     const { hits, totalHits } = data;
+
+     setImages(prevImages => [...prevImages, ...hits]);
+     setLoadMore(prevPage => prevPage < Math.ceil(totalHits / 12));
+     setPage(prevPage => prevPage + 1);
+     setError('');
+     setLoading(false);
+   } catch (error) {
+     if (error.response && error.response.status === 400) {
+       toast.error('Помилка запиту!');
+       setLoading(false);
+       setLoadMore(false);
+     } else {
+       setError(error.response?.data ?? 'Error fetching images');
+       setLoading(false);
+       setLoadMore(true);
+     }
+     
+   }
+ }, [query, page]);
+   
+    
   useEffect(() => {
     if (query.trim() !== '' && query !== lastQuery) {
       setLastQuery(query);
-      setPage(1); 
-      setImages([]); 
-      setLoadMore(false); 
       handleImages();
+      setLoadMore(true);
     }
-  }, [query, lastQuery, handleImages]);
-  
+    
+  }, [ query, loadMore, lastQuery, handleImages]);
+    
+    
   const onLoadMoreClick = () => {
     handleImages();
   };
@@ -71,11 +76,10 @@
       toast('Ви вже зробили аналогічний запит');
       return;
     }
+   
     setQuery(query);
     setPage(1);
-    setImages([]);
-    setLoadMore(true);
-    // console.log('query:', query);    
+    setImages([]);  
   };
 
   const toggleModal = () => {
@@ -102,6 +106,7 @@
       {loadMore && query.trim() !== '' && (
         <LoadMoreBtn onClick={onLoadMoreClick} />
       )}
+     
     </Container>
   );
 };
@@ -109,5 +114,3 @@
 export default App;
   
 
-
-  
