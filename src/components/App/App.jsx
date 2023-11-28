@@ -1,18 +1,17 @@
 
-  import { useState, useEffect, useCallback } from 'react';
-  import Modal from '../Modal/Modal';
-  import getImages from '../Api/imageApi';
-  import ImageGallery from '../ImageGallery/ImageGallery';
-  import Searchbar from '../Searchbar/Searchbar';
-  import LoadMoreBtn from '../Button/Button';
-  import Loader from '../Loader/Loader';
-  import css from './app.module.css';
-  import Container from '../Container/Container';
-  import {ToastContainer, toast } from 'react-toastify';
-  import 'react-toastify/dist/ReactToastify.css';
+import { useState, useEffect, useCallback } from 'react';
+import Modal from '../Modal/Modal';
+import getImages from '../Api/imageApi';
+import ImageGallery from '../ImageGallery/ImageGallery';
+import Searchbar from '../Searchbar/Searchbar';
+import LoadMoreBtn from '../Button/Button';
+import Loader from '../Loader/Loader';
+import css from './app.module.css';
+import Container from '../Container/Container';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-
-  const App = () => {
+const App = () => {
   const [showModal, setShowModal] = useState(false);
   const [query, setQuery] = useState('');
   const [images, setImages] = useState([]);
@@ -22,48 +21,47 @@
   const [loadMore, setLoadMore] = useState(false);
   const [lastQuery, setLastQuery] = useState('');
   const [modalImage, setModalImage] = useState(null);
-  
- 
- const handleImages = useCallback(async () => {
-   try {
-     setLoading(true);
-     setLoadMore(false);
 
-     const data = await getImages(query, page);
-     const { hits, totalHits } = data;
+  const handleImages = useCallback(async () => {
+    try {
+      setLoading(true);
+      setLoadMore(false);
 
-     setImages(prevImages => [...prevImages, ...hits]);
-     setLoadMore(prevPage => prevPage < Math.ceil(totalHits / 12));    
-     setLoadMore(false)
-     console.log('totalHits: ', totalHits);
-     console.log('hits.length:', hits.length);
-     setPage(prevPage => prevPage + 1);
-     setError('');
-     setLoading(false);
-   } catch (error) {
-     if (error.response && error.response.status === 400) {
-       setError(error)
-       toast.error('Помилка запиту!');
-       setLoading(false);
-       setLoadMore(false);
-     } else {
-       setError(error.response?.data ?? 'Error fetching images');       
-     }      
-   } finally {
-     setLoading(false);
-     }     
-   }, [query, page]);
-   
-    
+      const data = await getImages(query, page);
+      const { hits, totalHits } = data;
+
+      setImages(prevImages => [...prevImages, ...hits]);
+      setLoadMore(prevPage => prevPage < Math.ceil(totalHits / 12));
+      if (totalHits <= hits.length) {
+        setLoadMore(false);
+      }
+      console.log('totalHits: ', totalHits);
+      console.log('hits.length:', hits.length);
+      setPage(prevPage => prevPage + 1);
+      setError('');
+      setLoading(false);
+    } catch (error) {
+      if (error.response && error.response.status === 400) {
+        setError(error);
+        toast.error('Помилка запиту!');
+        setLoading(false);
+        setLoadMore(false);
+      } else {
+        setError(error.response?.data ?? 'Error fetching images');
+        setLoading(false);
+        //  setLoadMore(true);
+      }
+    }
+  }, [query, page]);
+
   useEffect(() => {
     if (query.trim() !== '' && query !== lastQuery) {
       setLastQuery(query);
       handleImages();
+      // setLoadMore(true);
     }
-    
-  }, [ query, lastQuery, handleImages]);
-    
-    
+  }, [query, loadMore, lastQuery, handleImages]);
+
   const onLoadMoreClick = () => {
     handleImages();
   };
@@ -78,10 +76,10 @@
       toast('Ви вже зробили аналогічний запит');
       return;
     }
-
+  
     setQuery(query);
     setPage(1);
-    setImages([]);  
+    setImages([]);
   };
 
   const toggleModal = () => {
@@ -107,11 +105,9 @@
       {error && <p className={css.error}>{error}</p>}
       {loadMore && query.trim() !== '' && (
         <LoadMoreBtn onClick={onLoadMoreClick} />
-      )}  
+      )}
     </Container>
   );
 };
 
 export default App;
-  
-
