@@ -1,4 +1,6 @@
 
+
+
 import { useState, useEffect, useCallback } from 'react';
 import Modal from '../Modal/Modal';
 import getImages from '../Api/imageApi';
@@ -21,69 +23,76 @@ const App = () => {
   const [loadMore, setLoadMore] = useState(false);
   const [lastQuery, setLastQuery] = useState('');
   const [modalImage, setModalImage] = useState(null);
- 
+  // const [initialLoad, setInitialLoad] = useState(true);
 
   const handleImages = useCallback(async () => {
     try {
+      setLoadMore(false)
       setLoading(true);
       const data = await getImages(query, page);
       const { hits, totalHits } = data;
       setImages(prevImages => [...prevImages, ...hits]);
-      setLoadMore(prevPage => prevPage < Math.ceil(totalHits / 12))
       setPage(prevPage => prevPage + 1);
+      // setLoadMore(prevPage => prevPage < Math.ceil(totalHits / 12));
+      if (hits.length < totalHits) setLoadMore(true);
       setError('');
-      setLoading(false);
     } catch (error) {
       if (error.response && error.response.status === 400) {
         toast.error('Помилка запиту!');
+        setLoading(false);
+        setLoadMore(false);
       } else {
         setError(error.response?.data ?? 'Error fetching images');
+        setLoading(false);
+        setLoadMore(false);
       }
-      setLoadMore(false);
+    } finally {
       setLoading(false);
+      
     }
   }, [query, page]);
-
   useEffect(() => {
     if (query.trim() !== '' && query !== lastQuery) {
       setLastQuery(query);
-      setLoadMore(true);
-      // setPage(1);
-      // setImages([]);
+      setPage(1);
+      setImages([]);
+      // setLoadMore(false);
       handleImages();
     }
-  }, [query, lastQuery, handleImages]);
+    
+  }, [ query, lastQuery, handleImages]);
 
+  
   const onLoadMoreClick = () => {
     handleImages();
   };
 
   const handleSubmit = ({ query }) => {
-      if (query.trim() === '') {
-        toast('Ви нічого не ввели. ');
-        return;
-      }
+    if (query.trim() === '') {
+      toast('Ви нічого не ввели. ');
+      return;
+    }
 
-      if (query.trim() === lastQuery.trim()) {
-        toast('Ви вже зробили аналогічний запит');
-        return;
-      }
+    if (query.trim() === lastQuery.trim()) {
+      toast('Ви вже зробили аналогічний запит');
+      return;
+    }
 
-      setQuery(query);
-      setPage(1);
-      setImages([]);
-    };
+    
 
-    const toggleModal = () => {
-      setShowModal(prevShowModal => !prevShowModal);
-    };
+    setQuery(query);
+    setPage(1);
+    setImages([]);
+  };
 
-    const handleImageClick = ({ largeImageURL, tags }) => {
-      setModalImage({ largeImageURL, tags });
-      setShowModal(true);
-    };
+  const toggleModal = () => {
+    setShowModal(prevShowModal => !prevShowModal);
+  };
 
-  
+  const handleImageClick = ({ largeImageURL, tags }) => {
+    setModalImage({ largeImageURL, tags });
+    setShowModal(true);
+  };
 
   return (
     <Container>
@@ -105,3 +114,5 @@ const App = () => {
 };
 
 export default App;
+
+
