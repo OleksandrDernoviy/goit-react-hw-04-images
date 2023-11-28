@@ -34,32 +34,36 @@
 
      setImages(prevImages => [...prevImages, ...hits]);
      setLoadMore(prevPage => prevPage < Math.ceil(totalHits / 12));
+     if (totalHits <= hits.length) {
+       setLoadMore(false);
+     }
+     console.log('totalHits: ', totalHits);
+     console.log('hits.length:', hits.length);
      setPage(prevPage => prevPage + 1);
      setError('');
      setLoading(false);
    } catch (error) {
      if (error.response && error.response.status === 400) {
+       setError(error)
        toast.error('Помилка запиту!');
        setLoading(false);
        setLoadMore(false);
      } else {
-       setError(error.response?.data ?? 'Error fetching images');
-       setLoading(false);
-       setLoadMore(true);
-     }
-     
-   }
- }, [query, page]);
+       setError(error.response?.data ?? 'Error fetching images');       
+     }      
+   } finally {
+     setLoading(false);
+     }     
+   }, [query, page]);
    
     
   useEffect(() => {
     if (query.trim() !== '' && query !== lastQuery) {
       setLastQuery(query);
       handleImages();
-      setLoadMore(true);
     }
     
-  }, [ query, loadMore, lastQuery, handleImages]);
+  }, [ query, lastQuery, handleImages]);
     
     
   const onLoadMoreClick = () => {
@@ -76,7 +80,7 @@
       toast('Ви вже зробили аналогічний запит');
       return;
     }
-   
+
     setQuery(query);
     setPage(1);
     setImages([]);  
@@ -105,8 +109,7 @@
       {error && <p className={css.error}>{error}</p>}
       {loadMore && query.trim() !== '' && (
         <LoadMoreBtn onClick={onLoadMoreClick} />
-      )}
-     
+      )}  
     </Container>
   );
 };
