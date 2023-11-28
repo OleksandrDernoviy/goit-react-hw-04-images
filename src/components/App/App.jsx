@@ -21,75 +21,69 @@ const App = () => {
   const [loadMore, setLoadMore] = useState(false);
   const [lastQuery, setLastQuery] = useState('');
   const [modalImage, setModalImage] = useState(null);
+ 
 
   const handleImages = useCallback(async () => {
     try {
       setLoading(true);
-      setLoadMore(false);
-
       const data = await getImages(query, page);
       const { hits, totalHits } = data;
-
       setImages(prevImages => [...prevImages, ...hits]);
-      setLoadMore(prevPage => prevPage < Math.ceil(totalHits / 12));
-      if (totalHits <= hits.length) {
-        setLoadMore(false);
-      }
-      console.log('totalHits: ', totalHits);
-      console.log('hits.length:', hits.length);
+      setLoadMore(prevPage => prevPage < Math.ceil(totalHits / 12))
       setPage(prevPage => prevPage + 1);
       setError('');
       setLoading(false);
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        setError(error);
         toast.error('Помилка запиту!');
-        setLoading(false);
-        setLoadMore(false);
       } else {
         setError(error.response?.data ?? 'Error fetching images');
-        setLoading(false);
-        //  setLoadMore(true);
       }
+      setLoadMore(false);
+      setLoading(false);
     }
   }, [query, page]);
 
   useEffect(() => {
     if (query.trim() !== '' && query !== lastQuery) {
       setLastQuery(query);
+      setLoadMore(true);
+      // setPage(1);
+      // setImages([]);
       handleImages();
-      // setLoadMore(true);
     }
-  }, [query, loadMore, lastQuery, handleImages]);
+  }, [query, lastQuery, handleImages]);
 
   const onLoadMoreClick = () => {
     handleImages();
   };
 
   const handleSubmit = ({ query }) => {
-    if (query.trim() === '') {
-      toast('Ви нічого не ввели. ');
-      return;
-    }
+      if (query.trim() === '') {
+        toast('Ви нічого не ввели. ');
+        return;
+      }
 
-    if (query.trim() === lastQuery.trim()) {
-      toast('Ви вже зробили аналогічний запит');
-      return;
-    }
+      if (query.trim() === lastQuery.trim()) {
+        toast('Ви вже зробили аналогічний запит');
+        return;
+      }
+
+      setQuery(query);
+      setPage(1);
+      setImages([]);
+    };
+
+    const toggleModal = () => {
+      setShowModal(prevShowModal => !prevShowModal);
+    };
+
+    const handleImageClick = ({ largeImageURL, tags }) => {
+      setModalImage({ largeImageURL, tags });
+      setShowModal(true);
+    };
+
   
-    setQuery(query);
-    setPage(1);
-    setImages([]);
-  };
-
-  const toggleModal = () => {
-    setShowModal(prevShowModal => !prevShowModal);
-  };
-
-  const handleImageClick = ({ largeImageURL, tags }) => {
-    setModalImage({ largeImageURL, tags });
-    setShowModal(true);
-  };
 
   return (
     <Container>
