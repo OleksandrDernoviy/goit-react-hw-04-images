@@ -33,10 +33,8 @@
      const { hits, totalHits } = data;
 
      setImages(prevImages => [...prevImages, ...hits]);
-     setLoadMore(prevPage => prevPage < Math.ceil(totalHits / 12));
-     if (totalHits <= hits.length) {
-       setLoadMore(false);
-     }
+     setLoadMore(prevPage => prevPage < Math.ceil(totalHits / 12));    
+     setLoadMore(false)
      console.log('totalHits: ', totalHits);
      console.log('hits.length:', hits.length);
      setPage(prevPage => prevPage + 1);
